@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Extraberries — Carga de nómina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2B1A0F;
+    --brand:#4E2409;
+    --brand-dark:#3A1A06;
+    --cream:#FBF7F1;
+    --card:#FFFFFF;
+    --line:#E7DFD3;
+    --muted:#7A6A5A;
+    --ok-bg:#E7F0DD; --ok-tx:#33551F;
+    --bad-bg:#F8E1E1; --bad-tx:#7C2323;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Inter',sans-serif; background:var(--cream); color:var(--ink);
+    min-height:100vh; display:flex; justify-content:center; line-height:1.5;
+  }
+  .app{width:100%; max-width:560px; min-height:100vh; padding:0 24px 60px;}
+  header{
+    display:flex; align-items:center; gap:10px; padding:22px 0 18px;
+  }
+  header img{width:34px; height:34px;}
+  header .t{font-weight:700; font-size:16px;}
+  header .t small{display:block; font-weight:400; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;}
+  h1{font-size:22px; font-weight:700; margin:8px 0;}
+  p.lead{color:var(--muted); font-size:14.5px; margin:0 0 20px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:16px;}
+  label{font-size:13px; font-weight:600; display:block; margin-bottom:6px;}
+  input[type=email], input[type=password]{
+    width:100%; font-size:16px; padding:12px; border-radius:10px; border:1.5px solid var(--line); margin-bottom:14px;
+  }
+  input[type=file]{width:100%; font-size:14px; margin-bottom:14px;}
+  button{
+    font-family:'Inter',sans-serif; font-size:15px; font-weight:600; border-radius:10px; border:none;
+    padding:14px 18px; cursor:pointer; width:100%; background:var(--brand); color:#fff;
+  }
+  button:disabled{background:#CBB9AA; cursor:not-allowed;}
+  button.secondary{background:#fff; color:var(--brand); border:1.5px solid var(--brand);}
+  .banner{font-size:13.5px; padding:11px 13px; border-radius:10px; margin-bottom:14px;}
+  .banner.error{background:var(--bad-bg); color:var(--bad-tx);}
+  .banner.ok{background:var(--ok-bg); color:var(--ok-tx);}
+  .hidden{display:none;}
+  table{width:100%; border-collapse:collapse; font-size:13.5px; margin-top:10px;}
+  th,td{text-align:left; padding:6px 4px; border-bottom:1px solid var(--line);}
+  .muted{color:var(--muted); font-size:13px;}
+  .progress-bar{height:8px; background:var(--line); border-radius:4px; overflow:hidden; margin:10px 0;}
+  .progress-bar i{display:block; height:100%; background:var(--brand); width:0%;}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="t">Extraberries<small>Carga de nómina</small></div>
+  </header>
+
+  <!-- LOGIN -->
+  <section id="loginView">
+    <h1>Ingresá como administrador</h1>
+    <p class="lead">Usá el mail y contraseña que creaste en Firebase Authentication.</p>
+    <div class="card">
+      <label for="email">Correo electrónico</label>
+      <input type="email" id="email" autocomplete="username">
+      <label for="pass">Contraseña</label>
+      <input type="password" id="pass" autocomplete="current-password">
+      <div id="loginError" class="banner error hidden"></div>
+      <button id="loginBtn">Ingresar</button>
+    </div>
+  </section>
+
+  <!-- IMPORTADOR -->
+  <section id="importView" class="hidden">
+    <h1>Cargar nómina de trabajadores</h1>
+    <p class="lead">Subí el Excel (.xlsx) o CSV con las columnas DNI y NOMBRE. Cada fila se guarda como un trabajador autorizado.</p>
+    <div class="card">
+      <label for="fileInput">Archivo de la nómina</label>
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+      <div id="previewWrap" class="hidden">
+        <p class="muted" id="previewCount"></p>
+        <table id="previewTable"></table>
+      </div>
+      <div id="importError" class="banner error hidden"></div>
+      <div id="importOk" class="banner ok hidden"></div>
+      <div class="progress-bar hidden" id="progressWrap"><i id="progressBar"></i></div>
+      <button id="importBtn" disabled>Confirmar carga</button>
+    </div>
+    <button class="secondary" id="logoutBtn">Cerrar sesión</button>
+  </section>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBXw0wuGkmRe4wkAffcq4g1VcEE9nP2ymM",
+  authDomain: "ingreso-temporada-2027.firebaseapp.com",
+  projectId: "ingreso-temporada-2027",
+  storageBucket: "ingreso-temporada-2027.firebasestorage.app",
+  messagingSenderId: "241196898408",
+  appId: "1:241196898408:web:c8e1469702a40cdbbb43dd"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let parsedRows = [];
+
+auth.onAuthStateChanged(user=>{
+  document.getElementById('loginView').classList.toggle('hidden', !!user);
+  document.getElementById('importView').classList.toggle('hidden', !user);
+});
+
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('email').value.trim();
+  const pass = document.getElementById('pass').value;
+  const errEl = document.getElementById('loginError');
+  errEl.classList.add('hidden');
+  try{
+    await auth.signInWithEmailAndPassword(email, pass);
+  }catch(e){
+    errEl.textContent = 'No pudimos iniciar sesión. Revisá el mail y la contraseña.';
+    errEl.classList.remove('hidden');
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', ()=> auth.signOut());
+
+function normalizeDni(v){
+  return String(v || '').replace(/\D/g, '');
+}
+
+function findKey(row, candidates){
+  const keys = Object.keys(row);
+  for(const c of candidates){
+    const k = keys.find(k => k.trim().toLowerCase() === c);
+    if(k) return k;
+  }
+  return null;
+}
+
+document.getElementById('fileInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  const importBtn = document.getElementById('importBtn');
+  const errEl = document.getElementById('importError');
+  errEl.classList.add('hidden');
+  parsedRows = [];
+  importBtn.disabled = true;
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (evt)=>{
+    try{
+      const wb = XLSX.read(evt.target.result, { type:'binary' });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { defval:'' });
+      if(!rows.length){
+        errEl.textContent = 'El archivo no tiene filas de datos.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      const dniKey = findKey(rows[0], ['dni','empleado','legajo']);
+      const nombreKey = findKey(rows[0], ['apellido_nombre','nombre','apellido y nombre','nombre completo']);
+      const apellidoKey = findKey(rows[0], ['apellido']);
+      const soloNombreKey = findKey(rows[0], ['nombre']);
+
+      if(!dniKey || !(nombreKey || (apellidoKey && soloNombreKey))){
+        errEl.textContent = 'No encontramos las columnas de DNI y nombre. Revisá los encabezados del archivo.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      parsedRows = rows.map(r => {
+        let nombreCompleto;
+        if(apellidoKey && soloNombreKey){
+          nombreCompleto = `${String(r[apellidoKey]||'').trim()} ${String(r[soloNombreKey]||'').trim()}`.trim();
+        }else{
+          nombreCompleto = String(r[nombreKey] || '').trim();
+        }
+        return { dni: normalizeDni(r[dniKey]), nombre: nombreCompleto };
+      }).filter(r => r.dni && r.nombre);
+
+      document.getElementById('previewWrap').classList.remove('hidden');
+      document.getElementById('previewCount').textContent = `${parsedRows.length} trabajadores detectados. Vista previa de los primeros 5:`;
+      const table = document.getElementById('previewTable');
+      table.innerHTML = '<tr><th>DNI</th><th>Nombre</th></tr>' +
+        parsedRows.slice(0,5).map(r => `<tr><td>${r.dni}</td><td>${r.nombre}</td></tr>`).join('');
+      importBtn.disabled = parsedRows.length === 0;
+    }catch(err){
+      console.error(err);
+      errEl.textContent = 'No pudimos leer el archivo. Verificá que sea un Excel o CSV válido.';
+      errEl.classList.remove('hidden');
+    }
+  };
+  reader.readAsBinaryString(file);
+});
+
+document.getElementById('importBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('importBtn');
+  const errEl = document.getElementById('importError');
+  const okEl = document.getElementById('importOk');
+  const progressWrap = document.getElementById('progressWrap');
+  const progressBar = document.getElementById('progressBar');
+  errEl.classList.add('hidden');
+  okEl.classList.add('hidden');
+  btn.disabled = true;
+  progressWrap.classList.remove('hidden');
+
+  const BATCH_SIZE = 400;
+  let done = 0;
+  try{
+    for(let i = 0; i < parsedRows.length; i += BATCH_SIZE){
+      const chunk = parsedRows.slice(i, i + BATCH_SIZE);
+      const batch = db.batch();
+      chunk.forEach(r=>{
+        const ref = db.collection('trabajadores').doc(r.dni);
+        batch.set(ref, { nombre: r.nombre }, { merge: true });
+      });
+      await batch.commit();
+      done += chunk.length;
+      progressBar.style.width = Math.round((done / parsedRows.length) * 100) + '%';
+    }
+    okEl.textContent = `Listo: se cargaron ${done} trabajadores a la nómina.`;
+    okEl.classList.remove('hidden');
+  }catch(e){
+    console.error(e);
+    errEl.textContent = 'Ocurrió un error guardando los datos. Probá de nuevo.';
+    errEl.classList.remove('hidden');
+  }finally{
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
