@@ -138,7 +138,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyBXw0wuGkmRe4wkAffcq4g1VcEE9nP2ymM",
@@ -238,25 +238,112 @@ function escapeHtml(str){
 document.getElementById('filterIdentidad').addEventListener('change', renderTable);
 document.getElementById('filterAsistencia').addEventListener('change', renderTable);
 
-document.getElementById('exportBtn').addEventListener('click', ()=>{
-  const fIdentidad = document.getElementById('filterIdentidad').value;
-  const fAsistencia = document.getElementById('filterAsistencia').value;
-  let rows = allRows.slice();
-  if(fIdentidad) rows = rows.filter(r => r.identidadEstado === fIdentidad);
-  if(fAsistencia) rows = rows.filter(r => (fAsistencia === 'si') === !!r.asiste);
+document.getElementById('exportBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('exportBtn');
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Generando…';
 
-  const data = rows.map(r => ({
-    Nombre: r.nombre || '',
-    DNI: r.dni || '',
-    Identidad: r.identidadEstado === 'ok' ? 'Verificado' : r.identidadEstado === 'warn' ? 'Revisar' : 'Rechazado',
-    'Coincidencia facial': r.coincidenciaFacial != null ? r.coincidenciaFacial + '%' : '',
-    Asistencia: r.asiste ? 'Asiste' : 'No asiste',
-    Fecha: r.fechaLocal || ''
-  }));
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Respuestas');
-  XLSX.writeFile(wb, 'extraberries_temporada_2027.xlsx');
+  try{
+    const fIdentidad = document.getElementById('filterIdentidad').value;
+    const fAsistencia = document.getElementById('filterAsistencia').value;
+    let rows = allRows.slice();
+    if(fIdentidad) rows = rows.filter(r => r.identidadEstado === fIdentidad);
+    if(fAsistencia) rows = rows.filter(r => (fAsistencia === 'si') === !!r.asiste);
+
+    const BRAND = 'FF4E2409';
+    const CREAM = 'FFFBF7F1';
+    const WHITE = 'FFFFFFFF';
+    const LINE = 'FFE7DFD3';
+    const OK_BG = 'FFE7F0DD', OK_TX = 'FF33551F';
+    const WARN_BG = 'FFFBEDD3', WARN_TX = 'FF7A4E0A';
+    const BAD_BG = 'FFF8E1E1', BAD_TX = 'FF7C2323';
+
+    const wb = new ExcelJS.Workbook();
+    wb.creator = 'Extraberries';
+    wb.created = new Date();
+    const ws = wb.addWorksheet('Temporada 2027', {
+      views: [{ state:'frozen', ySplit: 3 }]
+    });
+
+    ws.columns = [
+      { width: 30 }, { width: 14 }, { width: 16 }, { width: 18 }, { width: 16 }, { width: 20 }
+    ];
+
+    ws.mergeCells('A1:F1');
+    const title = ws.getCell('A1');
+    title.value = 'EXTRABERRIES  ·  Temporada 2027';
+    title.font = { bold:true, size:14, color:{argb:WHITE}, name:'Calibri' };
+    title.alignment = { vertical:'middle', horizontal:'left', indent:1 };
+    title.fill = { type:'pattern', pattern:'solid', fgColor:{argb:BRAND} };
+    ws.getRow(1).height = 28;
+
+    ws.mergeCells('A2:F2');
+    const subtitle = ws.getCell('A2');
+    subtitle.value = `Verificación de identidad y confirmación de asistencia — exportado el ${new Date().toLocaleString('es-AR')}`;
+    subtitle.font = { italic:true, size:10, color:{argb:'FF7A6A5A'}, name:'Calibri' };
+    subtitle.alignment = { vertical:'middle', indent:1 };
+    subtitle.fill = { type:'pattern', pattern:'solid', fgColor:{argb:CREAM} };
+    ws.getRow(2).height = 18;
+
+    const headerRow = ws.addRow(['Nombre','DNI','Identidad','Coincidencia facial','Asistencia 2027','Fecha']);
+    headerRow.eachCell(cell=>{
+      cell.font = { bold:true, color:{argb:WHITE}, name:'Calibri' };
+      cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:BRAND} };
+      cell.alignment = { vertical:'middle' };
+    });
+    headerRow.height = 20;
+
+    rows.forEach((r, i)=>{
+      const identidadTxt = r.identidadEstado === 'ok' ? 'Verificado' : r.identidadEstado === 'warn' ? 'Revisar' : 'Rechazado';
+      const asistTxt = r.asiste ? 'Asiste' : 'No asiste';
+      const row = ws.addRow([
+        r.nombre || '',
+        r.dni || '',
+        identidadTxt,
+        r.coincidenciaFacial != null ? (r.coincidenciaFacial + '%') : '—',
+        asistTxt,
+        r.fechaLocal || ''
+      ]);
+      const bandFill = (i % 2 === 0) ? WHITE : CREAM;
+      row.eachCell((cell, colNumber)=>{
+        cell.font = Object.assign({ name:'Calibri' }, cell.font);
+        cell.border = { bottom:{ style:'thin', color:{argb:LINE} } };
+        cell.alignment = { vertical:'middle' };
+        cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:bandFill} };
+        if(colNumber === 3){
+          const bg = identidadTxt === 'Verificado' ? OK_BG : identidadTxt === 'Revisar' ? WARN_BG : BAD_BG;
+          const tx = identidadTxt === 'Verificado' ? OK_TX : identidadTxt === 'Revisar' ? WARN_TX : BAD_TX;
+          cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:bg} };
+          cell.font = { bold:true, color:{argb:tx}, name:'Calibri' };
+        }
+        if(colNumber === 5){
+          const bg = asistTxt === 'Asiste' ? OK_BG : BAD_BG;
+          const tx = asistTxt === 'Asiste' ? OK_TX : BAD_TX;
+          cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:bg} };
+          cell.font = { bold:true, color:{argb:tx}, name:'Calibri' };
+        }
+      });
+      row.height = 19;
+    });
+
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `extraberries_temporada_2027_${new Date().toISOString().slice(0,10)}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }catch(e){
+    console.error('Error generando el Excel', e);
+    alert('No pudimos generar el Excel. Probá de nuevo.');
+  }finally{
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+  }
 });
 </script>
 </body>
