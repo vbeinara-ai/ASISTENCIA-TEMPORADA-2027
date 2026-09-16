@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Extraberries — Panel de administrador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2B1A0F;
+    --brand:#4E2409;
+    --brand-dark:#3A1A06;
+    --cream:#FBF7F1;
+    --card:#FFFFFF;
+    --line:#E7DFD3;
+    --muted:#7A6A5A;
+    --ok-bg:#E7F0DD; --ok-tx:#33551F;
+    --warn-bg:#FBEDD3; --warn-tx:#7A4E0A;
+    --bad-bg:#F8E1E1; --bad-tx:#7C2323;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:'Inter',sans-serif; background:var(--cream); color:var(--ink); line-height:1.5;
+  }
+  .app{max-width:1000px; margin:0 auto; padding:0 20px 60px;}
+  header{
+    display:flex; align-items:center; justify-content:space-between; padding:20px 0 16px; gap:12px; flex-wrap:wrap;
+  }
+  header .t{font-weight:700; font-size:16px;}
+  header .t small{display:block; font-weight:400; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;}
+  h1{font-size:22px; font-weight:700; margin:6px 0 16px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px; margin-bottom:16px;}
+  label{font-size:13px; font-weight:600; display:block; margin-bottom:6px;}
+  input[type=email], input[type=password]{
+    width:100%; font-size:16px; padding:12px; border-radius:10px; border:1.5px solid var(--line); margin-bottom:14px;
+  }
+  button{
+    font-family:'Inter',sans-serif; font-size:14.5px; font-weight:600; border-radius:10px; border:none;
+    padding:11px 16px; cursor:pointer; background:var(--brand); color:#fff;
+  }
+  button.secondary{background:#fff; color:var(--brand); border:1.5px solid var(--brand);}
+  button.small{padding:8px 12px; font-size:13px;}
+  .hidden{display:none;}
+  .banner{font-size:13.5px; padding:11px 13px; border-radius:10px; margin-bottom:14px;}
+  .banner.error{background:var(--bad-bg); color:var(--bad-tx);}
+
+  .metrics{display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin-bottom:16px;}
+  .metric{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px;}
+  .metric .n{font-size:22px; font-weight:700;}
+  .metric .l{font-size:12px; color:var(--muted); margin-top:2px;}
+
+  .toolbar{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px;}
+  select{
+    font-family:'Inter',sans-serif; font-size:14px; padding:9px 10px; border-radius:10px; border:1.5px solid var(--line); background:#fff;
+  }
+  .toolbar .spacer{flex:1;}
+
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  thead th{text-align:left; padding:10px 8px; color:var(--muted); font-weight:600; border-bottom:1px solid var(--line); white-space:nowrap;}
+  tbody td{padding:10px 8px; border-bottom:1px solid var(--line);}
+  tbody tr:last-child td{border-bottom:none;}
+  .badge{display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:999px; font-size:12.5px; font-weight:600; white-space:nowrap;}
+  .badge.ok{background:var(--ok-bg); color:var(--ok-tx);}
+  .badge.warn{background:var(--warn-bg); color:var(--warn-tx);}
+  .badge.bad{background:var(--bad-bg); color:var(--bad-tx);}
+  .empty{padding:30px; text-align:center; color:var(--muted); font-size:14px;}
+  .table-wrap{overflow-x:auto;}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="t">Extraberries<small>Panel de administrador</small></div>
+    <button class="secondary small hidden" id="logoutBtn">Cerrar sesión</button>
+  </header>
+
+  <!-- LOGIN -->
+  <section id="loginView">
+    <h1>Ingresá como administrador</h1>
+    <div class="card">
+      <label for="email">Correo electrónico</label>
+      <input type="email" id="email" autocomplete="username">
+      <label for="pass">Contraseña</label>
+      <input type="password" id="pass" autocomplete="current-password">
+      <div id="loginError" class="banner error hidden"></div>
+      <button id="loginBtn">Ingresar</button>
+    </div>
+  </section>
+
+  <!-- PANEL -->
+  <section id="panelView" class="hidden">
+    <h1>Temporada 2027 — Respuestas registradas</h1>
+
+    <div class="metrics">
+      <div class="metric"><div class="n" id="mTotal">0</div><div class="l">Respuestas totales</div></div>
+      <div class="metric"><div class="n" id="mOk">0</div><div class="l">Identidad verificada</div></div>
+      <div class="metric"><div class="n" id="mWarn">0</div><div class="l">Para revisar</div></div>
+      <div class="metric"><div class="n" id="mAsiste">0</div><div class="l">Confirmaron asistencia</div></div>
+    </div>
+
+    <div class="toolbar">
+      <select id="filterIdentidad">
+        <option value="">Identidad: todas</option>
+        <option value="ok">Verificado</option>
+        <option value="warn">Revisar</option>
+        <option value="bad">Rechazado</option>
+      </select>
+      <select id="filterAsistencia">
+        <option value="">Asistencia: todas</option>
+        <option value="si">Asiste</option>
+        <option value="no">No asiste</option>
+      </select>
+      <div class="spacer"></div>
+      <button class="secondary small" id="exportBtn">Exportar a Excel</button>
+    </div>
+
+    <div class="card table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>DNI</th>
+            <th>Identidad</th>
+            <th>Coincidencia</th>
+            <th>Asistencia 2027</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div id="emptyState" class="empty hidden">Todavía no hay respuestas registradas.</div>
+    </div>
+  </section>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBXw0wuGkmRe4wkAffcq4g1VcEE9nP2ymM",
+  authDomain: "ingreso-temporada-2027.firebaseapp.com",
+  projectId: "ingreso-temporada-2027",
+  storageBucket: "ingreso-temporada-2027.firebasestorage.app",
+  messagingSenderId: "241196898408",
+  appId: "1:241196898408:web:c8e1469702a40cdbbb43dd"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let allRows = [];
+let unsubscribe = null;
+
+auth.onAuthStateChanged(user=>{
+  document.getElementById('loginView').classList.toggle('hidden', !!user);
+  document.getElementById('panelView').classList.toggle('hidden', !user);
+  document.getElementById('logoutBtn').classList.toggle('hidden', !user);
+  if(user){
+    startListening();
+  }else if(unsubscribe){
+    unsubscribe();
+    unsubscribe = null;
+  }
+});
+
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('email').value.trim();
+  const pass = document.getElementById('pass').value;
+  const errEl = document.getElementById('loginError');
+  errEl.classList.add('hidden');
+  try{
+    await auth.signInWithEmailAndPassword(email, pass);
+  }catch(e){
+    errEl.textContent = 'No pudimos iniciar sesión. Revisá el mail y la contraseña.';
+    errEl.classList.remove('hidden');
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', ()=> auth.signOut());
+
+function startListening(){
+  unsubscribe = db.collection('respuestas').orderBy('fecha','desc').onSnapshot(snap=>{
+    allRows = snap.docs.map(d=>d.data());
+    renderTable();
+  }, err=>{
+    console.error('Error escuchando respuestas', err);
+  });
+}
+
+function badgeHtml(status){
+  if(status === 'ok') return '<span class="badge ok">Verificado</span>';
+  if(status === 'warn') return '<span class="badge warn">Revisar</span>';
+  return '<span class="badge bad">Rechazado</span>';
+}
+
+function renderTable(){
+  const fIdentidad = document.getElementById('filterIdentidad').value;
+  const fAsistencia = document.getElementById('filterAsistencia').value;
+
+  let rows = allRows.slice();
+  if(fIdentidad) rows = rows.filter(r => r.identidadEstado === fIdentidad);
+  if(fAsistencia) rows = rows.filter(r => (fAsistencia === 'si') === !!r.asiste);
+
+  document.getElementById('mTotal').textContent = allRows.length;
+  document.getElementById('mOk').textContent = allRows.filter(r=>r.identidadEstado==='ok').length;
+  document.getElementById('mWarn').textContent = allRows.filter(r=>r.identidadEstado==='warn').length;
+  document.getElementById('mAsiste').textContent = allRows.filter(r=>r.asiste).length;
+
+  const body = document.getElementById('tableBody');
+  const empty = document.getElementById('emptyState');
+  if(rows.length === 0){
+    body.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  body.innerHTML = rows.map(r => `
+    <tr>
+      <td>${escapeHtml(r.nombre || '')}</td>
+      <td>${escapeHtml(r.dni || '')}</td>
+      <td>${badgeHtml(r.identidadEstado)}</td>
+      <td>${r.coincidenciaFacial != null ? r.coincidenciaFacial + '%' : '—'}</td>
+      <td>${r.asiste ? '<span class="badge ok">Asiste</span>' : '<span class="badge bad">No asiste</span>'}</td>
+      <td>${escapeHtml(r.fechaLocal || '')}</td>
+    </tr>
+  `).join('');
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+document.getElementById('filterIdentidad').addEventListener('change', renderTable);
+document.getElementById('filterAsistencia').addEventListener('change', renderTable);
+
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const fIdentidad = document.getElementById('filterIdentidad').value;
+  const fAsistencia = document.getElementById('filterAsistencia').value;
+  let rows = allRows.slice();
+  if(fIdentidad) rows = rows.filter(r => r.identidadEstado === fIdentidad);
+  if(fAsistencia) rows = rows.filter(r => (fAsistencia === 'si') === !!r.asiste);
+
+  const data = rows.map(r => ({
+    Nombre: r.nombre || '',
+    DNI: r.dni || '',
+    Identidad: r.identidadEstado === 'ok' ? 'Verificado' : r.identidadEstado === 'warn' ? 'Revisar' : 'Rechazado',
+    'Coincidencia facial': r.coincidenciaFacial != null ? r.coincidenciaFacial + '%' : '',
+    Asistencia: r.asiste ? 'Asiste' : 'No asiste',
+    Fecha: r.fechaLocal || ''
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Respuestas');
+  XLSX.writeFile(wb, 'extraberries_temporada_2027.xlsx');
+});
+</script>
+</body>
+</html>
