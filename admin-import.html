@@ -89,6 +89,10 @@
       </div>
       <div id="importError" class="banner error hidden"></div>
       <div id="importOk" class="banner ok hidden"></div>
+      <label style="display:flex; align-items:center; gap:8px; font-weight:500; margin-bottom:14px;">
+        <input type="checkbox" id="replaceAll" style="width:auto; margin:0;">
+        Reemplazar toda la nómina anterior (borra los trabajadores cargados antes de sumar estos)
+      </label>
       <div class="progress-bar hidden" id="progressWrap"><i id="progressBar"></i></div>
       <button id="importBtn" disabled>Confirmar carga</button>
     </div>
@@ -210,14 +214,26 @@ document.getElementById('importBtn').addEventListener('click', async ()=>{
   const okEl = document.getElementById('importOk');
   const progressWrap = document.getElementById('progressWrap');
   const progressBar = document.getElementById('progressBar');
+  const replaceAll = document.getElementById('replaceAll').checked;
   errEl.classList.add('hidden');
   okEl.classList.add('hidden');
   btn.disabled = true;
   progressWrap.classList.remove('hidden');
+  progressBar.style.width = '0%';
 
-  const BATCH_SIZE = 400;
-  let done = 0;
   try{
+    if(replaceAll){
+      const existing = await db.collection('trabajadores').get();
+      const docs = existing.docs;
+      for(let i = 0; i < docs.length; i += 400){
+        const batch = db.batch();
+        docs.slice(i, i + 400).forEach(d => batch.delete(d.ref));
+        await batch.commit();
+      }
+    }
+
+    const BATCH_SIZE = 400;
+    let done = 0;
     for(let i = 0; i < parsedRows.length; i += BATCH_SIZE){
       const chunk = parsedRows.slice(i, i + BATCH_SIZE);
       const batch = db.batch();
@@ -229,7 +245,9 @@ document.getElementById('importBtn').addEventListener('click', async ()=>{
       done += chunk.length;
       progressBar.style.width = Math.round((done / parsedRows.length) * 100) + '%';
     }
-    okEl.textContent = `Listo: se cargaron ${done} trabajadores a la nómina.`;
+    okEl.textContent = replaceAll
+      ? `Listo: se reemplazó la nómina anterior y se cargaron ${done} trabajadores.`
+      : `Listo: se cargaron ${done} trabajadores a la nómina.`;
     okEl.classList.remove('hidden');
   }catch(e){
     console.error(e);
