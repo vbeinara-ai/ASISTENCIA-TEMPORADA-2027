@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Extraberries — Confirmación temporada 2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1F2A1B;
+    --leaf:#2F4A28;
+    --leaf-dark:#1B2E17;
+    --berry:#A8324C;
+    --berry-dark:#7C2138;
+    --cream:#FAF6EC;
+    --card:#FFFFFF;
+    --line:#E4DFD1;
+    --muted:#6B6656;
+    --ok-bg:#E7F0DD;
+    --ok-tx:#33551F;
+    --warn-bg:#FBEDD3;
+    --warn-tx:#7A4E0A;
+    --bad-bg:#F8E1E1;
+    --bad-tx:#7C2323;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    line-height:1.5;
+  }
+  .app{
+    width:100%;
+    max-width:460px;
+    min-height:100vh;
+    background:var(--cream);
+    display:flex;
+    flex-direction:column;
+  }
+  header.brand{
+    background:var(--leaf-dark);
+    color:#F2EFE3;
+    padding:22px 24px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  header.brand .mark{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:20px;
+    letter-spacing:0.2px;
+  }
+  header.brand .mark span{color:#E6A6B3;}
+  header.brand .season{
+    font-size:12px;
+    color:#C7CBBE;
+    border:1px solid #3E5536;
+    padding:3px 9px;
+    border-radius:999px;
+  }
+  .progress{
+    display:flex;
+    gap:6px;
+    padding:14px 24px 0;
+  }
+  .progress i{
+    flex:1;
+    height:3px;
+    border-radius:3px;
+    background:var(--line);
+  }
+  .progress i.done{background:var(--leaf);}
+  main{
+    flex:1;
+    padding:28px 24px 40px;
+    display:flex;
+    flex-direction:column;
+  }
+  .step{display:none;flex-direction:column;flex:1;animation:fade .25s ease;}
+  .step.active{display:flex;}
+  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:26px;
+    margin:0 0 8px;
+    line-height:1.2;
+  }
+  p.lead{
+    color:var(--muted);
+    font-size:15px;
+    margin:0 0 24px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px;
+    margin-bottom:14px;
+  }
+  button{
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    font-weight:600;
+    border-radius:10px;
+    border:none;
+    padding:15px 18px;
+    cursor:pointer;
+    width:100%;
+  }
+  .btn-primary{background:var(--berry);color:#fff;}
+  .btn-primary:active{background:var(--berry-dark);}
+  .btn-secondary{background:#fff;color:var(--leaf-dark);border:1.5px solid var(--leaf);}
+  .btn-ghost{background:transparent;color:var(--muted);font-weight:500;padding:10px;}
+  .btn-primary:disabled{background:#CBB9BE;cursor:not-allowed;}
+  .stack{display:flex;flex-direction:column;gap:10px;margin-top:auto;padding-top:18px;}
+  input[type=text]{
+    width:100%;
+    font-size:17px;
+    padding:14px;
+    border-radius:10px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    font-family:'Inter',sans-serif;
+  }
+  input[type=text]:focus{outline:2px solid var(--leaf);border-color:var(--leaf);}
+  label{font-size:13px;font-weight:600;color:var(--leaf-dark);display:block;margin-bottom:6px;}
+  .field{margin-bottom:16px;}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px;}
+  video, .shot{
+    width:100%;
+    border-radius:12px;
+    background:#111;
+    display:block;
+    aspect-ratio:3/4;
+    object-fit:cover;
+  }
+  .video-wrap{position:relative;margin-bottom:14px;}
+  .video-wrap .frame{
+    position:absolute;inset:10%;
+    border:2px dashed rgba(255,255,255,.75);
+    border-radius:10px;
+    pointer-events:none;
+  }
+  .video-wrap .challenge{
+    position:absolute;top:10px;left:10px;right:10px;
+    background:rgba(27,46,23,.85);
+    color:#fff;
+    font-size:14px;
+    font-weight:600;
+    padding:9px 12px;
+    border-radius:8px;
+    text-align:center;
+  }
+  .status-line{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:14px;
+    color:var(--muted);
+    margin-bottom:14px;
+  }
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--line);flex-shrink:0;}
+  .dot.spin{background:var(--berry);animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:5px 12px;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:600;
+  }
+  .badge.ok{background:var(--ok-bg);color:var(--ok-tx);}
+  .badge.warn{background:var(--warn-bg);color:var(--warn-tx);}
+  .badge.bad{background:var(--bad-bg);color:var(--bad-tx);}
+  .result-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:11px 0;
+    border-bottom:1px solid var(--line);
+    font-size:14px;
+  }
+  .result-row:last-child{border-bottom:none;}
+  .result-row .k{color:var(--muted);}
+  .result-row .v{font-weight:600;}
+  .choice-grid{display:flex;gap:10px;margin-top:6px;}
+  .choice-grid button{flex:1;}
+  .attend-yes{background:var(--ok-bg);color:var(--ok-tx);border:1.5px solid #8FB56A;}
+  .attend-no{background:var(--bad-bg);color:var(--bad-tx);border:1.5px solid #DE9A9A;}
+  .attend-yes.picked, .attend-no.picked{outline:2px solid currentColor;}
+  .banner{
+    font-size:13px;
+    padding:11px 13px;
+    border-radius:10px;
+    margin-bottom:14px;
+  }
+  .banner.info{background:#EFF1E7;color:var(--leaf-dark);}
+  .banner.error{background:var(--bad-bg);color:var(--bad-tx);}
+  footer.note{
+    text-align:center;
+    font-size:12px;
+    color:var(--muted);
+    padding:16px 24px 26px;
+  }
+  .demo-tag{
+    position:fixed;top:10px;right:10px;
+    background:#1B2E17;color:#F2EFE3;
+    font-size:11px;padding:4px 9px;border-radius:6px;
+    opacity:.85;z-index:50;
+  }
+  .center-icon{
+    width:64px;height:64px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    margin:6px auto 18px;font-size:28px;
+  }
+</style>
+</head>
+<body>
+<span class="demo-tag">Prototipo · datos de prueba</span>
+<div class="app">
+  <header class="brand">
+    <div class="mark">Extra<span>berries</span></div>
+    <div class="season">Temporada 2027</div>
+  </header>
+  <div class="progress" id="progressBar">
+    <i data-p="1"></i><i data-p="2"></i><i data-p="3"></i><i data-p="4"></i><i data-p="5"></i>
+  </div>
+
+  <main>
+
+    <!-- 0. Bienvenida -->
+    <section class="step active" data-step="bienvenida">
+      <h1>Confirmá tu ingreso a la temporada</h1>
+      <p class="lead">Este proceso lleva menos de dos minutos. Vamos a verificar tu identidad para que nadie pueda registrarse en tu nombre, y después nos decís si vas a estar en la temporada 2027.</p>
+      <div class="card">
+        <div class="result-row"><span class="k">Paso 1</span><span class="v">Tu documento</span></div>
+        <div class="result-row"><span class="k">Paso 2</span><span class="v">Una foto tuya en vivo</span></div>
+        <div class="result-row"><span class="k">Paso 3</span><span class="v">Confirmar si asistís</span></div>
+      </div>
+      <p class="hint">Tu foto se procesa en tu propio celular. No se envía a internet para la verificación.</p>
+      <div class="stack">
+        <button class="btn-primary" onclick="goTo('identidad')">Comenzar</button>
+      </div>
+    </section>
+
+    <!-- 1. Identidad: elegir método -->
+    <section class="step" data-step="identidad">
+      <h1>¿Tenés tu DNI a mano?</h1>
+      <p class="lead">Si lo tenés, escaneamos el código para completar tus datos solo. Si no, lo escribís vos.</p>
+      <div class="stack" style="margin-top:0;padding-top:0;">
+        <button class="btn-primary" onclick="startScan()">Escanear código del DNI</button>
+        <button class="btn-secondary" onclick="goTo('manual')">Escribir mi DNI</button>
+      </div>
+      <p class="hint" style="margin-top:20px;">Modo demo: probá con 30111222, 27888999, 35222444 o 40567123. Cualquier otro número se rechaza, como pasaría con un DNI no cargado en la lista de Extraberries.</p>
+    </section>
+
+    <!-- 1b. Escaneo -->
+    <section class="step" data-step="scan">
+      <h1>Enfocá el código de tu DNI</h1>
+      <p class="lead">El código de barras alto (PDF417) está en el dorso del documento.</p>
+      <div class="video-wrap">
+        <video id="scanVideo" playsinline muted></video>
+        <div class="frame"></div>
+      </div>
+      <div class="status-line"><span class="dot spin" id="scanDot"></span><span id="scanStatus">Buscando el código…</span></div>
+      <div class="stack">
+        <button class="btn-ghost" onclick="stopScan(); goTo('identidad')">Volver</button>
+      </div>
+    </section>
+
+    <!-- 1c. Manual -->
+    <section class="step" data-step="manual">
+      <h1>Escribí tu número de DNI</h1>
+      <p class="lead">Sin puntos ni espacios.</p>
+      <div class="field">
+        <label for="dniInput">Número de DNI</label>
+        <input type="text" id="dniInput" inputmode="numeric" placeholder="30111222" maxlength="9">
+      </div>
+      <div id="manualError" class="banner error" style="display:none;"></div>
+      <div class="stack">
+        <button class="btn-primary" id="manualContinue" onclick="checkDni(document.getElementById('dniInput').value)">Continuar</button>
+        <button class="btn-ghost" onclick="goTo('identidad')">Volver</button>
+      </div>
+    </section>
+
+    <!-- 2. Rechazo -->
+    <section class="step" data-step="rechazado">
+      <div class="center-icon" style="background:var(--bad-bg);color:var(--bad-tx);">✕</div>
+      <h1 style="text-align:center;">DNI no autorizado</h1>
+      <p class="lead" style="text-align:center;">No encontramos ese número en la lista de personas convocadas para esta temporada. Comunicate con tu supervisor de Extraberries si creés que es un error.</p>
+      <div class="stack">
+        <button class="btn-secondary" onclick="resetAll()">Intentar de nuevo</button>
+      </div>
+    </section>
+
+    <!-- 3. Confirmar datos encontrados -->
+    <section class="step" data-step="encontrado">
+      <div class="center-icon" style="background:var(--ok-bg);color:var(--ok-tx);">✓</div>
+      <h1 style="text-align:center;">¡Hola, <span id="foundName"></span>!</h1>
+      <p class="lead" style="text-align:center;">Encontramos tu registro. Ahora vamos a confirmar que sos vos con una foto de tu documento y una selfie.</p>
+      <div class="stack">
+        <button class="btn-primary" onclick="goTo('fotoDni')">Continuar</button>
+      </div>
+    </section>
+
+    <!-- 4. Foto del DNI -->
+    <section class="step" data-step="fotoDni">
+      <h1>Fotografiá el frente de tu DNI</h1>
+      <p class="lead">Necesitamos ver tu foto del documento para compararla con tu selfie.</p>
+      <div class="video-wrap">
+        <video id="dniVideo" playsinline muted autoplay></video>
+      </div>
+      <div id="dniPhotoError" class="banner error" style="display:none;"></div>
+      <div class="stack">
+        <button class="btn-primary" id="captureDniBtn" onclick="captureDniPhoto()">Tomar foto</button>
+        <button class="btn-ghost" onclick="goTo('encontrado')">Volver</button>
+      </div>
+    </section>
+
+    <!-- 5. Liveness + selfie -->
+    <section class="step" data-step="liveness">
+      <h1>Ahora una foto tuya en vivo</h1>
+      <p class="lead">Seguí la instrucción en pantalla. Esto evita que alguien use una foto en vez de mostrarse en persona.</p>
+      <div class="video-wrap">
+        <video id="liveVideo" playsinline muted autoplay></video>
+        <div class="challenge" id="challengeText">Preparando cámara…</div>
+      </div>
+      <div class="status-line"><span class="dot spin" id="liveDot"></span><span id="liveStatus">Esperando rostro…</span></div>
+    </section>
+
+    <!-- 6. Verificando -->
+    <section class="step" data-step="verificando">
+      <h1>Comparando tus fotos</h1>
+      <p class="lead">Un momento, esto se calcula en tu celular.</p>
+      <div class="status-line"><span class="dot spin"></span><span>Analizando coincidencia facial…</span></div>
+    </section>
+
+    <!-- 7. Resultado identidad -->
+    <section class="step" data-step="resultado">
+      <h1 id="resultTitle">Identidad verificada</h1>
+      <p class="lead" id="resultLead"></p>
+      <div class="card">
+        <div class="result-row"><span class="k">Nombre</span><span class="v" id="resDniName"></span></div>
+        <div class="result-row"><span class="k">DNI</span><span class="v" id="resDniNum"></span></div>
+        <div class="result-row"><span class="k">Coincidencia facial</span><span class="v" id="resScore"></span></div>
+        <div class="result-row"><span class="k">Estado</span><span class="v" id="resBadge"></span></div>
+      </div>
+      <div class="stack">
+        <button class="btn-primary" onclick="goTo('asistencia')">Continuar</button>
+      </div>
+    </section>
+
+    <!-- 8. Asistencia -->
+    <section class="step" data-step="asistencia">
+      <h1>¿Vas a la temporada 2027?</h1>
+      <p class="lead">Tu respuesta queda registrada junto a tu verificación de identidad.</p>
+      <div class="choice-grid">
+        <button class="attend-yes" id="btnAsiste" onclick="pickAttendance(true)">Sí, asisto</button>
+        <button class="attend-no" id="btnNoAsiste" onclick="pickAttendance(false)">No asisto</button>
+      </div>
+      <div class="stack">
+        <button class="btn-primary" id="confirmAttendance" onclick="goTo('final')" disabled>Confirmar respuesta</button>
+      </div>
+    </section>
+
+    <!-- 9. Final -->
+    <section class="step" data-step="final">
+      <div class="center-icon" style="background:var(--ok-bg);color:var(--ok-tx);">✓</div>
+      <h1 style="text-align:center;">Listo, quedó registrado</h1>
+      <p class="lead" style="text-align:center;">Gracias por confirmar. Este es un resumen de lo que se guardaría en el sistema de Extraberries.</p>
+      <div class="card">
+        <div class="result-row"><span class="k">Nombre</span><span class="v" id="finName"></span></div>
+        <div class="result-row"><span class="k">DNI</span><span class="v" id="finDni"></span></div>
+        <div class="result-row"><span class="k">Identidad</span><span class="v" id="finIdBadge"></span></div>
+        <div class="result-row"><span class="k">Asistencia 2027</span><span class="v" id="finAttendBadge"></span></div>
+        <div class="result-row"><span class="k">Fecha</span><span class="v" id="finDate"></span></div>
+      </div>
+      <div class="stack">
+        <button class="btn-secondary" onclick="resetAll()">Volver al inicio (demo)</button>
+      </div>
+    </section>
+
+  </main>
+  <footer class="note">Extraberries · Verificación de identidad para inicio de temporada</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.20.0/umd/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script>
+/* ---------- Datos de prueba (simulan la planilla de personas autorizadas) ---------- */
+const AUTORIZADOS = [
+  { dni: '30111222', nombre: 'Lucía Benítez' },
+  { dni: '27888999', nombre: 'Martín Sosa' },
+  { dni: '35222444', nombre: 'Rocío Ferreyra' },
+  { dni: '40567123', nombre: 'Bruno Aquino' },
+];
+
+const STEP_ORDER = ['bienvenida','identidad','manual','scan','rechazado','encontrado','fotoDni','liveness','verificando','resultado','asistencia','final'];
+const PROGRESS_MAP = { identidad:1, manual:1, scan:1, encontrado:2, fotoDni:2, liveness:3, verificando:3, resultado:4, asistencia:5, final:5 };
+
+let state = { dni:null, nombre:null, dniDescriptor:null, selfieDescriptor:null, score:null, identityStatus:null, attendance:null };
+let modelsReady = false;
+
+function goTo(name){
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
+  document.querySelector(`[data-step="${name}"]`).classList.add('active');
+  const p = PROGRESS_MAP[name] || 0;
+  document.querySelectorAll('#progressBar i').forEach(i=>{
+    i.classList.toggle('done', Number(i.dataset.p) <= p);
+  });
+  if(name === 'fotoDni') startDniCamera();
+  if(name === 'liveness') startLiveness();
+}
+
+function resetAll(){
+  state = { dni:null, nombre:null, dniDescriptor:null, selfieDescriptor:null, score:null, identityStatus:null, attendance:null };
+  document.getElementById('dniInput').value = '';
+  document.getElementById('manualError').style.display = 'none';
+  document.getElementById('btnAsiste').classList.remove('picked');
+  document.getElementById('btnNoAsiste').classList.remove('picked');
+  document.getElementById('confirmAttendance').disabled = true;
+  goTo('bienvenida');
+}
+
+/* ---------- Carga de modelos face-api (una sola vez) ---------- */
+async function loadModels(){
+  if(modelsReady) return true;
+  const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
+  try{
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+    ]);
+    modelsReady = true;
+    return true;
+  }catch(e){
+    console.error('No se pudieron cargar los modelos de reconocimiento facial', e);
+    return false;
+  }
+}
+loadModels();
+
+/* ---------- Verificación de DNI contra la lista ---------- */
+function checkDni(raw){
+  const dni = (raw || '').replace(/\D/g,'');
+  const err = document.getElementById('manualError');
+  if(dni.length < 6){
+    err.textContent = 'Ingresá un número de DNI válido.';
+    err.style.display = 'block';
+    return;
+  }
+  const found = AUTORIZADOS.find(p => p.dni === dni);
+  if(!found){
+    goTo('rechazado');
+    return;
+  }
+  state.dni = found.dni;
+  state.nombre = found.nombre;
+  document.getElementById('foundName').textContent = found.nombre;
+  goTo('encontrado');
+}
+
+/* ---------- Escaneo de código PDF417/QR del DNI ---------- */
+let scanControls = null;
+async function startScan(){
+  goTo('scan');
+  const statusEl = document.getElementById('scanStatus');
+  try{
+    const codeReader = new ZXing.BrowserMultiFormatReader();
+    const devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
+    const deviceId = devices.length ? devices[devices.length-1].deviceId : undefined;
+    scanControls = await codeReader.decodeFromVideoDevice(deviceId, 'scanVideo', (result, err) => {
+      if(result){
+        statusEl.textContent = 'Código detectado, verificando…';
+        const text = result.getText();
+        stopScan();
+        const digits = text.match(/\d{7,8}/);
+        if(digits){
+          checkDni(digits[0]);
+        }else{
+          statusEl.textContent = 'No pudimos leer el número. Probá con carga manual.';
+          setTimeout(()=>goTo('manual'), 1200);
+        }
+      }
+    });
+  }catch(e){
+    statusEl.textContent = 'No se pudo acceder a la cámara. Usá la carga manual.';
+    console.error(e);
+  }
+}
+function stopScan(){
+  if(scanControls){ scanControls.stop(); scanControls = null; }
+}
+
+/* ---------- Foto del DNI (para extraer el rostro impreso) ---------- */
+let dniStream = null;
+async function startDniCamera(){
+  const video = document.getElementById('dniVideo');
+  try{
+    dniStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'environment' } });
+    video.srcObject = dniStream;
+  }catch(e){
+    document.getElementById('dniPhotoError').style.display = 'block';
+    document.getElementById('dniPhotoError').textContent = 'No se pudo acceder a la cámara trasera.';
+  }
+}
+async function captureDniPhoto(){
+  const video = document.getElementById('dniVideo');
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video,0,0);
+  if(dniStream) dniStream.getTracks().forEach(t=>t.stop());
+
+  const errEl = document.getElementById('dniPhotoError');
+  errEl.style.display = 'none';
+  const ok = await loadModels();
+  if(!ok){
+    errEl.textContent = 'La verificación facial no está disponible ahora mismo. Continuamos sin comparación automática.';
+    errEl.style.display = 'block';
+    state.dniDescriptor = null;
+    goTo('liveness');
+    return;
+  }
+  const detection = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions())
+    .withFaceLandmarks().withFaceDescriptor();
+  if(!detection){
+    errEl.textContent = 'No encontramos una cara en la foto del documento. Volvé a intentar con buena luz.';
+    errEl.style.display = 'block';
+    return;
+  }
+  state.dniDescriptor = detection.descriptor;
+  goTo('liveness');
+}
+
+/* ---------- Prueba de vida + selfie ---------- */
+let liveStream = null;
+let livenessTimer = null;
+const CHALLENGES = ['Parpadeá dos veces', 'Girá apenas la cabeza hacia la derecha'];
+let challengeIndex = 0;
+let baselineNoseX = null;
+let blinkCount = 0;
+let eyeWasClosed = false;
+
+async function startLiveness(){
+  const video = document.getElementById('liveVideo');
+  const challengeText = document.getElementById('challengeText');
+  const statusEl = document.getElementById('liveStatus');
+  const dot = document.getElementById('liveDot');
+  challengeIndex = 0; blinkCount = 0; baselineNoseX = null; eyeWasClosed = false;
+  challengeText.textContent = CHALLENGES[0];
+
+  try{
+    liveStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode:'user' } });
+    video.srcObject = liveStream;
+  }catch(e){
+    statusEl.textContent = 'No se pudo acceder a la cámara frontal.';
+    return;
+  }
+
+  const ok = await loadModels();
+  if(!ok){
+    statusEl.textContent = 'Verificación facial no disponible, continuando…';
+    setTimeout(()=>finishLiveness(null), 1500);
+    return;
+  }
+
+  dot.classList.add('spin');
+  statusEl.textContent = 'Buscando tu rostro…';
+
+  livenessTimer = setInterval(async ()=>{
+    if(video.readyState < 2) return;
+    const det = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
+    if(!det){ statusEl.textContent = 'No vemos tu rostro, acercate a la cámara.'; return; }
+
+    statusEl.textContent = 'Rostro detectado, seguí la instrucción.';
+    const lm = det.landmarks;
+    const nose = lm.getNose()[3];
+    const leftEye = lm.getLeftEye();
+    const rightEye = lm.getRightEye();
+
+    if(challengeIndex === 0){
+      const ear = eyeAspectRatio(leftEye) + eyeAspectRatio(rightEye);
+      if(ear < 0.42 && !eyeWasClosed){ eyeWasClosed = true; }
+      if(ear >= 0.42 && eyeWasClosed){ eyeWasClosed = false; blinkCount++; }
+      if(blinkCount >= 2){ challengeIndex = 1; challengeText.textContent = CHALLENGES[1]; baselineNoseX = null; }
+    } else if(challengeIndex === 1){
+      if(baselineNoseX === null){ baselineNoseX = nose.x; }
+      if(Math.abs(nose.x - baselineNoseX) > 18){
+        clearInterval(livenessTimer);
+        challengeText.textContent = 'Prueba de vida superada';
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video,0,0);
+        const finalDet = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks().withFaceDescriptor();
+        if(liveStream) liveStream.getTracks().forEach(t=>t.stop());
+        finishLiveness(finalDet ? finalDet.descriptor : null);
+      }
+    }
+  }, 350);
+}
+
+function eyeAspectRatio(eye){
+  const dist = (a,b)=>Math.hypot(a.x-b.x, a.y-b.y);
+  const v1 = dist(eye[1], eye[5]);
+  const v2 = dist(eye[2], eye[4]);
+  const h = dist(eye[0], eye[3]);
+  return (v1+v2) / (2.0*h);
+}
+
+function finishLiveness(descriptor){
+  state.selfieDescriptor = descriptor;
+  goTo('verificando');
+  setTimeout(computeResult, 1200);
+}
+
+/* ---------- Cálculo de coincidencia y estado ---------- */
+function computeResult(){
+  let scorePct, status;
+  if(state.dniDescriptor && state.selfieDescriptor){
+    const distance = faceapi.euclideanDistance(state.dniDescriptor, state.selfieDescriptor);
+    scorePct = Math.max(0, Math.round((1 - distance/0.9) * 100));
+    if(distance < 0.5) status = 'ok';
+    else if(distance < 0.62) status = 'warn';
+    else status = 'bad';
+  }else{
+    scorePct = null;
+    status = 'warn';
+  }
+  state.score = scorePct;
+  state.identityStatus = status;
+
+  const titleEl = document.getElementById('resultTitle');
+  const leadEl = document.getElementById('resultLead');
+  const badgeEl = document.getElementById('resBadge');
+  document.getElementById('resDniName').textContent = state.nombre;
+  document.getElementById('resDniNum').textContent = state.dni;
+  document.getElementById('resScore').textContent = scorePct !== null ? scorePct + '%' : 'No calculado';
+
+  if(status === 'ok'){
+    titleEl.textContent = 'Identidad verificada';
+    leadEl.textContent = 'Tu selfie coincide con la foto de tu documento.';
+    badgeEl.innerHTML = '<span class="badge ok">Verificado</span>';
+  }else if(status === 'warn'){
+    titleEl.textContent = 'Quedó para revisión';
+    leadEl.textContent = 'Tu respuesta se guarda igual, pero un supervisor va a revisar esta verificación.';
+    badgeEl.innerHTML = '<span class="badge warn">Revisar</span>';
+  }else{
+    titleEl.textContent = 'No pudimos confirmar tu identidad';
+    leadEl.textContent = 'La cara de la selfie no coincide con la del documento. Un supervisor va a contactarte.';
+    badgeEl.innerHTML = '<span class="badge bad">Rechazado</span>';
+  }
+  goTo('resultado');
+}
+
+/* ---------- Asistencia ---------- */
+function pickAttendance(yes){
+  state.attendance = yes;
+  document.getElementById('btnAsiste').classList.toggle('picked', yes);
+  document.getElementById('btnNoAsiste').classList.toggle('picked', !yes);
+  document.getElementById('confirmAttendance').disabled = false;
+}
+
+document.getElementById('confirmAttendance').addEventListener('click', ()=>{
+  document.getElementById('finName').textContent = state.nombre;
+  document.getElementById('finDni').textContent = state.dni;
+  const idBadge = state.identityStatus === 'ok' ? '<span class="badge ok">Verificado</span>'
+    : state.identityStatus === 'warn' ? '<span class="badge warn">Revisar</span>'
+    : '<span class="badge bad">Rechazado</span>';
+  document.getElementById('finIdBadge').innerHTML = idBadge;
+  document.getElementById('finAttendBadge').innerHTML = state.attendance
+    ? '<span class="badge ok">Asiste</span>' : '<span class="badge bad">No asiste</span>';
+  document.getElementById('finDate').textContent = new Date().toLocaleDateString('es-AR');
+});
+</script>
+</body>
+</html>
