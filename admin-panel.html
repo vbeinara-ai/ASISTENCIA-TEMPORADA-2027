@@ -91,7 +91,7 @@
 
   <!-- PANEL -->
   <section id="panelView" class="hidden">
-    <h1>Temporada 2027 — Respuestas registradas</h1>
+    <h1>Temporada 2026 — Respuestas registradas</h1>
 
     <div class="metrics">
       <div class="metric"><div class="n" id="mTotal">0</div><div class="l">Respuestas totales</div></div>
@@ -124,7 +124,7 @@
             <th>DNI</th>
             <th>Identidad</th>
             <th>Coincidencia</th>
-            <th>Asistencia 2027</th>
+            <th>Asistencia 2026</th>
             <th>Fecha</th>
           </tr>
         </thead>
@@ -262,7 +262,7 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
     const wb = new ExcelJS.Workbook();
     wb.creator = 'Extraberries';
     wb.created = new Date();
-    const ws = wb.addWorksheet('Temporada 2027', {
+    const ws = wb.addWorksheet('Temporada 2026', {
       views: [{ state:'frozen', ySplit: 3 }]
     });
 
@@ -272,7 +272,7 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
 
     ws.mergeCells('A1:F1');
     const title = ws.getCell('A1');
-    title.value = 'EXTRABERRIES  ·  Temporada 2027';
+    title.value = 'EXTRABERRIES  ·  Temporada 2026';
     title.font = { bold:true, size:14, color:{argb:WHITE}, name:'Calibri' };
     title.alignment = { vertical:'middle', horizontal:'left', indent:1 };
     title.fill = { type:'pattern', pattern:'solid', fgColor:{argb:BRAND} };
@@ -286,7 +286,7 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
     subtitle.fill = { type:'pattern', pattern:'solid', fgColor:{argb:CREAM} };
     ws.getRow(2).height = 18;
 
-    const headerRow = ws.addRow(['Nombre','DNI','Identidad','Coincidencia facial','Asistencia 2027','Fecha']);
+    const headerRow = ws.addRow(['Nombre','DNI','Identidad','Coincidencia facial','Asistencia 2026','Fecha']);
     headerRow.eachCell(cell=>{
       cell.font = { bold:true, color:{argb:WHITE}, name:'Calibri' };
       cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:BRAND} };
@@ -332,7 +332,7 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `extraberries_temporada_2027_${new Date().toISOString().slice(0,10)}.xlsx`;
+    a.download = `extraberries_temporada_2026_${new Date().toISOString().slice(0,10)}.xlsx`;
     document.body.appendChild(a);
     a.click();
     a.remove();
