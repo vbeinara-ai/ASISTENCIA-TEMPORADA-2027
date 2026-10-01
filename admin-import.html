@@ -173,11 +173,15 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
         return;
       }
       const dniKey = findKey(rows[0], ['dni','empleado','legajo']);
-      const nombreKey = findKey(rows[0], ['apellido_nombre','nombre','apellido y nombre','nombre completo']);
+      // Columna ya combinada (ej: "APELLIDO NOMBRE" en una sola celda) tiene prioridad.
+      const combinedKey = findKey(rows[0], ['apellido_nombre','apellido nombre','apellido y nombre','nombre completo']);
       const apellidoKey = findKey(rows[0], ['apellido']);
       const soloNombreKey = findKey(rows[0], ['nombre']);
+      const categoriaKey = findKey(rows[0], ['categoria','categoría']);
+      const areaKey = findKey(rows[0], ['area','área']);
+      const cuilKey = findKey(rows[0], ['cuil']);
 
-      if(!dniKey || !(nombreKey || (apellidoKey && soloNombreKey))){
+      if(!dniKey || !(combinedKey || (apellidoKey && soloNombreKey) || soloNombreKey)){
         errEl.textContent = 'No encontramos las columnas de DNI y nombre. Revisá los encabezados del archivo.';
         errEl.classList.remove('hidden');
         return;
@@ -185,19 +189,25 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
 
       parsedRows = rows.map(r => {
         let nombreCompleto;
-        if(apellidoKey && soloNombreKey){
+        if(combinedKey){
+          nombreCompleto = String(r[combinedKey] || '').trim();
+        }else if(apellidoKey && soloNombreKey){
           nombreCompleto = `${String(r[apellidoKey]||'').trim()} ${String(r[soloNombreKey]||'').trim()}`.trim();
         }else{
-          nombreCompleto = String(r[nombreKey] || '').trim();
+          nombreCompleto = String(r[soloNombreKey] || '').trim();
         }
-        return { dni: normalizeDni(r[dniKey]), nombre: nombreCompleto };
+        const row = { dni: normalizeDni(r[dniKey]), nombre: nombreCompleto };
+        if(categoriaKey) row.categoria = String(r[categoriaKey] || '').trim();
+        if(areaKey) row.area = String(r[areaKey] || '').trim();
+        if(cuilKey) row.cuil = String(r[cuilKey] || '').trim();
+        return row;
       }).filter(r => r.dni && r.nombre);
 
       document.getElementById('previewWrap').classList.remove('hidden');
       document.getElementById('previewCount').textContent = `${parsedRows.length} trabajadores detectados. Vista previa de los primeros 5:`;
       const table = document.getElementById('previewTable');
-      table.innerHTML = '<tr><th>DNI</th><th>Nombre</th></tr>' +
-        parsedRows.slice(0,5).map(r => `<tr><td>${r.dni}</td><td>${r.nombre}</td></tr>`).join('');
+      table.innerHTML = '<tr><th>DNI</th><th>Nombre</th><th>Categoría</th></tr>' +
+        parsedRows.slice(0,5).map(r => `<tr><td>${r.dni}</td><td>${r.nombre}</td><td>${r.categoria||'—'}</td></tr>`).join('');
       importBtn.disabled = parsedRows.length === 0;
     }catch(err){
       console.error(err);
@@ -239,7 +249,11 @@ document.getElementById('importBtn').addEventListener('click', async ()=>{
       const batch = db.batch();
       chunk.forEach(r=>{
         const ref = db.collection('trabajadores').doc(r.dni);
-        batch.set(ref, { nombre: r.nombre }, { merge: true });
+        const payload = { nombre: r.nombre };
+        if(r.categoria) payload.categoria = r.categoria;
+        if(r.area) payload.area = r.area;
+        if(r.cuil) payload.cuil = r.cuil;
+        batch.set(ref, payload, { merge: true });
       });
       await batch.commit();
       done += chunk.length;

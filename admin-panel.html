@@ -132,6 +132,20 @@
       </table>
       <div id="emptyState" class="empty hidden">Todavía no hay respuestas registradas.</div>
     </div>
+
+    <div class="card" style="border-color:#F0C8C8;">
+      <div style="font-weight:700; font-size:14px; margin-bottom:4px; color:var(--bad-tx,#7C2323);">Zona de peligro</div>
+      <p style="font-size:13px; color:var(--muted); margin:0 0 12px;">
+        Esto borra TODAS las respuestas de identidad y asistencia guardadas hasta ahora. No borra la nómina de trabajadores (eso se hace desde admin-import.html). Es irreversible.
+      </p>
+      <label style="font-size:13px; display:block; margin-bottom:8px;">
+        Para confirmar, escribí <strong>BORRAR</strong> acá abajo:
+      </label>
+      <input type="text" id="confirmWipeInput" placeholder="BORRAR" style="width:100%; padding:10px; border-radius:8px; border:1.5px solid var(--line); margin-bottom:10px; font-size:14px;">
+      <div id="wipeError" class="banner error hidden"></div>
+      <div id="wipeOk" class="banner ok hidden"></div>
+      <button id="wipeBtn" style="background:#7C2323;" disabled>Borrar todas las respuestas</button>
+    </div>
   </section>
 </div>
 
@@ -237,6 +251,40 @@ function escapeHtml(str){
 
 document.getElementById('filterIdentidad').addEventListener('change', renderTable);
 document.getElementById('filterAsistencia').addEventListener('change', renderTable);
+
+document.getElementById('confirmWipeInput').addEventListener('input', (e)=>{
+  document.getElementById('wipeBtn').disabled = (e.target.value.trim() !== 'BORRAR');
+});
+
+document.getElementById('wipeBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('wipeBtn');
+  const errEl = document.getElementById('wipeError');
+  const okEl = document.getElementById('wipeOk');
+  errEl.classList.add('hidden');
+  okEl.classList.add('hidden');
+  btn.disabled = true;
+  btn.textContent = 'Borrando…';
+
+  try{
+    const snap = await db.collection('respuestas').get();
+    const docs = snap.docs;
+    for(let i = 0; i < docs.length; i += 400){
+      const batch = db.batch();
+      docs.slice(i, i + 400).forEach(d => batch.delete(d.ref));
+      await batch.commit();
+    }
+    okEl.textContent = `Listo: se borraron ${docs.length} respuestas. El panel queda en cero.`;
+    okEl.classList.remove('hidden');
+    document.getElementById('confirmWipeInput').value = '';
+  }catch(e){
+    console.error('Error borrando respuestas', e);
+    errEl.textContent = 'No pudimos borrar las respuestas. Probá de nuevo.';
+    errEl.classList.remove('hidden');
+  }finally{
+    btn.disabled = true;
+    btn.textContent = 'Borrar todas las respuestas';
+  }
+});
 
 document.getElementById('exportBtn').addEventListener('click', async ()=>{
   const btn = document.getElementById('exportBtn');
