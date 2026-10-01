@@ -164,7 +164,8 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
   const reader = new FileReader();
   reader.onload = (evt)=>{
     try{
-      const wb = XLSX.read(evt.target.result, { type:'array' });
+      const data = new Uint8Array(evt.target.result);
+      const wb = XLSX.read(data, { type:'array' });
       const sheet = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(sheet, { defval:'' });
       if(!rows.length){
