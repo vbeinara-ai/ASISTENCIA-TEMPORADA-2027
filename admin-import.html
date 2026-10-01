@@ -164,7 +164,7 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
   const reader = new FileReader();
   reader.onload = (evt)=>{
     try{
-      const wb = XLSX.read(evt.target.result, { type:'binary' });
+      const wb = XLSX.read(evt.target.result, { type:'array' });
       const sheet = wb.Sheets[wb.SheetNames[0]];
       const rows = XLSX.utils.sheet_to_json(sheet, { defval:'' });
       if(!rows.length){
@@ -182,7 +182,8 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
       const cuilKey = findKey(rows[0], ['cuil']);
 
       if(!dniKey || !(combinedKey || (apellidoKey && soloNombreKey) || soloNombreKey)){
-        errEl.textContent = 'No encontramos las columnas de DNI y nombre. Revisá los encabezados del archivo.';
+        const encontradas = Object.keys(rows[0]).join(', ');
+        errEl.textContent = `No encontramos las columnas de DNI y nombre. Columnas detectadas en el archivo: ${encontradas || '(ninguna)'}`;
         errEl.classList.remove('hidden');
         return;
       }
@@ -215,7 +216,7 @@ document.getElementById('fileInput').addEventListener('change', (e)=>{
       errEl.classList.remove('hidden');
     }
   };
-  reader.readAsBinaryString(file);
+  reader.readAsArrayBuffer(file);
 });
 
 document.getElementById('importBtn').addEventListener('click', async ()=>{
